@@ -1,26 +1,40 @@
 import { useState } from 'react';
 import Input from '../../components/Form/Input';
 import Button from '../../components/ui/Button';
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase/firebaseConfig";
+import { useNavigate } from 'react-router-dom';
+
 import { AiOutlineUser, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { loginWithToken } from '../../services/authServices';
+import authService from '../../services/authServices';
+import axios from 'axios';
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate(); // Use useNavigate for navigation
 
   const handleLogin = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const token = await userCredential.user.getIdToken();
-      console.log(token);
-      const userData = await loginWithToken(token);
+      const userData = await authService.login(username, password);
+      console.log("user data,", userData);
+      alert("Login successful!");
+
     } catch (err) {
       console.log(err)
     }
   }
+  const handleGoogleLogin = async () => {
+    try {
+      const { token, email, name } = await authService.loginWithGoogle();
+      const apiURL = import.meta.env.VITE_API_BASE_URL;
+      console.log("API URL:", apiURL);
+      const response = await axios.post(`${apiURL}/auth/google-login`, { token, email, name });
+      console.log("User data from backend:", response.data);
+      navigate('/home');
+    } catch (error) {
+      console.error("Error during Google login:", error);
+    }
+  };
 
   return (
     <div className="font-[sans-serif] max-sm:px-4">
@@ -38,8 +52,8 @@ const Login: React.FC = () => {
                   <div className='flex-1'>
                     <Input
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
                       className="w-full text-gray-800 text-sm border-b border-gray-300 focus:border-second pl-2 pr-8 py-3 outline-none " placeholder="Enter email"
                     />
                   </div>
@@ -91,8 +105,7 @@ const Login: React.FC = () => {
                 <hr className="w-full border-gray-300" />
               </div>
               <div className="space-x-6 flex justify-center">
-                <button type="button"
-                  className="border-none outline-none">
+                <button type="button" onClick={handleGoogleLogin} >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 inline" viewBox="0 0 512 512">
                     <path fill="#fbbd00"
                       d="M120 256c0-25.367 6.989-49.13 19.131-69.477v-86.308H52.823C18.568 144.703 0 198.922 0 256s18.568 111.297 52.823 155.785h86.308v-86.308C126.989 305.13 120 281.367 120 256z"
@@ -114,23 +127,15 @@ const Login: React.FC = () => {
                       data-original="#eb4132" />
                   </svg>
                 </button>
-                <button type="button"
-                  className="border-none outline-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 inline" fill="#000" viewBox="0 0 22.773 22.773">
-                    <path d="M15.769 0h.162c.13 1.606-.483 2.806-1.228 3.675-.731.863-1.732 1.7-3.351 1.573-.108-1.583.506-2.694 1.25-3.561C13.292.879 14.557.16 15.769 0zm4.901 16.716v.045c-.455 1.378-1.104 2.559-1.896 3.655-.723.995-1.609 2.334-3.191 2.334-1.367 0-2.275-.879-3.676-.903-1.482-.024-2.297.735-3.652.926h-.462c-.995-.144-1.798-.932-2.383-1.642-1.725-2.098-3.058-4.808-3.306-8.276v-1.019c.105-2.482 1.311-4.5 2.914-5.478.846-.52 2.009-.963 3.304-.765.555.086 1.122.276 1.619.464.471.181 1.06.502 1.618.485.378-.011.754-.208 1.135-.347 1.116-.403 2.21-.865 3.652-.648 1.733.262 2.963 1.032 3.723 2.22-1.466.933-2.625 2.339-2.427 4.74.176 2.181 1.444 3.457 3.028 4.209z" data-original="#000000"></path>
-                  </svg>
-                </button>
-                <button type="submit"
-                  className="border-none outline-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 inline" fill="#007bff" viewBox="0 0 167.657 167.657">
-                    <path d="M83.829.349C37.532.349 0 37.881 0 84.178c0 41.523 30.222 75.911 69.848 82.57v-65.081H49.626v-23.42h20.222V60.978c0-20.037 12.238-30.956 30.115-30.956 8.562 0 15.92.638 18.056.919v20.944l-12.399.006c-9.72 0-11.594 4.618-11.594 11.397v14.947h23.193l-3.025 23.42H94.026v65.653c41.476-5.048 73.631-40.312 73.631-83.154 0-46.273-37.532-83.805-83.828-83.805z" data-original="#010002"></path>
-                  </svg>
+
+                <button type="button" className='w-32 h-20 bg-gray-400' onClick={handleGoogleLogin} >
+                  Tạo tài khoản
+
                 </button>
               </div>
             </form>
           </div>
           <div className="w-full h-full flex items-center bg-[#000842] rounded-xl ">
-            <img src="https://online.dlu.edu.vn/static/images/Carousel/DLU-A1.png" className="w-full h-full  object-cover rounded-xl" alt="login-image" />
           </div>
 
         </div>
