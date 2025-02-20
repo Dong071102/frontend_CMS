@@ -11,7 +11,9 @@ interface LoginResponse {
 const login = async (username: string, password: string): Promise<{ success: boolean; userID?: string; message?: string }> => {
     try {
         // Send POST request to the Go API
-        const response: AxiosResponse<LoginResponse> = await axios.post('http://localhost:PORT/api/login', {
+        const apiURL = import.meta.env.VITE_API_BASE_URL;
+        
+        const response: AxiosResponse<LoginResponse> = await axios.post(`${apiURL}/auth/login`, {
             username: username,
             password: password,
         });
